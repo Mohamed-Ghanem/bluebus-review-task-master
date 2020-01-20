@@ -1,0 +1,33 @@
+.card-scene{
+  padding: 50px 0;
+  overflow-x: auto;
+}
+
+.card-container{
+  width: 320px;
+  padding: 10px;
+  margin: 5px 45px 5px 5px;
+  background-color: #f3f3f3;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.24);
+}
+
+.card{
+  margin: 5px;
+  background-color: white;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.24);
+  padding: 10px;
+}
+
+.card-column-header{
+  font-size: 18px;
+}
+
+.column-drag-handle{
+  cursor: move;
+  padding: 5px; 
+}
+
+.ant-time-picker-icon,
+.ant-time-picker-clear {
+  z-index: 0;
+}

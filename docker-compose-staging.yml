@@ -1,0 +1,17 @@
+# docker-compose.yml
+
+version: '3.4'
+
+services:
+  app:
+    container_name: bluebus-dashboard
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env-staging
+    command: npm start
+    ports:
+      - 9992:3000
+    volumes:
+      - '.:/usr/src/app'
+      - '/usr/src/app/node_modules'
