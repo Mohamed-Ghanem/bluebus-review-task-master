@@ -55,7 +55,8 @@ const client = new ApolloClient({
     }),
     // requestLink,
     new HttpLink({
-      uri: process.env.REACT_APP_BACKEND_URL,
+      // uri: process.env.REACT_APP_BACKEND_URL,
+      uri: 'http://206.189.196.39:9395/graphql',
     }),
   ]),
   cache,
