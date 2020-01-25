@@ -262,11 +262,11 @@ class TripComposerView extends Component {
         <label>Ref Code (SKU)</label>
         <Input
           placeholder="Please enter ref_code"
-          style={{ width: '300px', display: 'block', margin: '0 0 20px' }}
+          className="bb-new-trip-ref-code"
           onChange={this.onChangeref_code}
         />
-        <div style={{ margin: '20px 0' }}>
-          <label style={{ display: 'block' }}>Access</label>
+        <div className="bb-new-trip-access">
+          <label className="bb-new-trip-access-label">Access</label>
           <RadioGroup onChange={this.onChangeAcessLevel} value={access_level}>
             <Radio value={'Public'}>Public</Radio>
             <Radio value={'Private'}>Private</Radio>
@@ -278,7 +278,7 @@ class TripComposerView extends Component {
               mode="multiple"
               placeholder="Specify POS"
               value={POS}
-              style={{ width: '150px' }}
+              className="bb-new-trip-access-select-input"
               selectedCities={POS}
             />
           ) : null}
@@ -286,18 +286,18 @@ class TripComposerView extends Component {
         <label>Trip Range</label>
         <RangePicker
           onChange={this.onChangeRange}
-          style={{ width: '300px', display: 'block', margin: '20px 0' }}
+          className="bb-new-trip-trip-range-picker"
           disabledDate={this.disabledDate}
         />
         <h2>Start creating route and instances</h2>
-        <div style={{ width: '300px' }}>
+        <div className="bb-start-creating-route">
           <SelectInput
             options={allcities}
             handleChange={this.handleMultipleSelectChange}
             mode="multiple"
             placeholder="Select Line Cities"
             value={selectedCities}
-            style={{ width: '100%' }}
+            className="bb-start-creating-route-select-input"
             selectedCities={selectedCities}
           />
         </div>
@@ -313,7 +313,7 @@ class TripComposerView extends Component {
         ) : null}
 
         {selectedCities.length > 1 ? (
-          <div style={{ textAlign: 'right', padding: '20px 0' }}>
+          <div className="bb-start-scheduling-button">
             <Button type="primary" onClick={this.handelOnClickSchedule}>
               Start Scheduling
             </Button>
@@ -321,7 +321,7 @@ class TripComposerView extends Component {
         ) : null}
 
         {startScheduling ? (
-          <div style={{ paddingTop: '20px' }}>
+          <div className="bb-start-scheduling">
             {selectedCitiesObject.length > 1 ? (
               <TableStations
                 locations_name={locations_name}
@@ -331,12 +331,12 @@ class TripComposerView extends Component {
                 selectedLocationObj={selectedLocationObj}
               />
             ) : (
-              <p style={{ color: 'red' }}>
+              <p className="bb-paragraph-error-color">
                 Please Select more than one Location from at least 2 different
                 cities
               </p>
             )}
-            <div style={{ textAlign: 'right', padding: '20px 0' }}>
+            <div className="bb-set-seat-price-button">
               <Button type="primary" onClick={this.handelOnClickSeatPrice}>
                 Set Seats Price
               </Button>
@@ -352,10 +352,10 @@ class TripComposerView extends Component {
               getSeatPricing={this.getSeatPricing}
             />
           ) : (
-            <p style={{ color: 'red' }}>Please Select at least One Bus Salon</p>
+            <p className="bb-paragraph-error-color">Please Select at least One Bus Salon</p>
           )
         ) : null}
-        <Button style={{ margin: '20px 0' }} type="primary" onClick={this.onSubmit}>
+        <Button className="bb-create-trip-button" type="primary" onClick={this.onSubmit}>
           Create Trip
         </Button>
       </div>
