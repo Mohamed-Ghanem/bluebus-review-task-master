@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { Button, Input, DatePicker, Radio } from 'antd';
+import { Form, Button, Input, DatePicker, Radio, Tooltip } from 'antd';
 import { graphql, compose } from 'react-apollo';
 import { Redirect } from 'react-router-dom';
 import moment from 'moment';
+
 import { SelectInput } from '@components';
 import {
   DraggableCards,
@@ -10,11 +11,16 @@ import {
   SeatPricing,
 } from './components';
 import { AllLocations, AllSalons, CreatTrip } from '../../services';
-import './trip-composer.css';
 import { handleResponse } from '@utilities';
+
+import './trip-composer.css';
 
 const RadioGroup = Radio.Group;
 const { RangePicker } = DatePicker;
+
+function hasErrors(fieldsError) {
+  return Object.keys(fieldsError).some(field => fieldsError[field]);
+}
 
 class TripComposerView extends Component {
   state = {
@@ -117,7 +123,7 @@ class TripComposerView extends Component {
   handelOnClickSeatPrice = () => {
     const { selectedCities, selectedCitiesObject } = this.state;
     /**Arrange selected cities object according to arranged cities */
-    selectedCitiesObject.sort(function(a, b) {
+    selectedCitiesObject.sort(function (a, b) {
       return selectedCities.indexOf(a.name) - selectedCities.indexOf(b.name);
     });
     this.setState({ seatPrice: true, selectedCitiesObject });
@@ -128,7 +134,7 @@ class TripComposerView extends Component {
     const { allCityObj } = this.props;
     let locations_name = [];
     /**Arrange selected locations according to arranged cities */
-    this.arrangedSelectedLocations.sort(function(a, b) {
+    this.arrangedSelectedLocations.sort(function (a, b) {
       return selectedCities.indexOf(a.city) - selectedCities.indexOf(b.city);
     });
     locations_name = this.arrangedSelectedLocations
@@ -216,6 +222,7 @@ class TripComposerView extends Component {
       },
       addons: { create: addons },
     };
+
     this.props
       .CreatTrip({ variables: { input: tripComposerData } })
       .then(response => {
@@ -229,7 +236,7 @@ class TripComposerView extends Component {
         if (error) {
           let customError =
             error.toString().includes('not to be null') ||
-            error.toString().includes('was not provided')
+              error.toString().includes('was not provided')
               ? `Please fill all the fields`
               : undefined;
           handleResponse('error', error, customError);
@@ -241,6 +248,50 @@ class TripComposerView extends Component {
   disabledDate(current) {
     // Can not select days before today and today
     return current && current < moment().endOf('day');
+  }
+
+  requiredRule = (message) => {
+    return {
+      required: true,
+      message,
+    }
+  }
+
+  handleSubmit = e => {
+    e.preventDefault();
+    this.props.form.validateFieldsAndScroll((err, values) => {
+      if (!err) {
+        this.onSubmit();
+      }
+    });
+  }
+
+  isCreateButtonDisabled = () => {
+    const { ref_code, from_date, to_date, routeLines } = this;
+    const {
+      selectedCities,
+      startScheduling,
+      locations_name,
+      selectedLocationObj,
+      seatPrice,
+      selectedCitiesObject,
+      access_level,
+      POS,
+      timeLines
+    } = this.state;
+
+    const {
+      getFieldsError
+    } = this.props.form;
+
+    return hasErrors(getFieldsError()) ||
+      !(ref_code &&
+        (access_level === 'Public' || access_level === 'Private' && POS.length) &&
+        from_date &&
+        to_date &&
+        selectedCities.length > 1 &&
+        selectedCitiesObject.length > 1 &&
+        this.busesSalons.length !== 0);
   }
 
   render() {
@@ -256,112 +307,144 @@ class TripComposerView extends Component {
     } = this.state;
 
     const { allcities, allLocations, allSalons } = this.props;
+    const { getFieldDecorator } = this.props.form;
+
     return (
-      <div className="trip-composer">
-        <h1>New Trip</h1>
-        <label>Ref Code (SKU)</label>
-        <Input
-          placeholder="Please enter ref_code"
-          style={{ width: '300px', display: 'block', margin: '0 0 20px' }}
-          onChange={this.onChangeref_code}
-        />
-        <div style={{ margin: '20px 0' }}>
-          <label style={{ display: 'block' }}>Access</label>
-          <RadioGroup onChange={this.onChangeAcessLevel} value={access_level}>
-            <Radio value={'Public'}>Public</Radio>
-            <Radio value={'Private'}>Private</Radio>
-          </RadioGroup>
-          {access_level === 'Private' ? (
+      <Form onSubmit={this.handleSubmit}>
+        <div className="trip-composer">
+          <h1>New Trip</h1>
+          <Form.Item label="Ref Code (SKU)">
+            {getFieldDecorator('ref_code', {
+              rules: [
+                this.requiredRule('Please input your ref_code!')
+              ],
+            })(
+              <Input
+                placeholder="Please enter ref_code"
+                className="bb-new-trip-ref-code"
+                onChange={this.onChangeref_code}
+              />
+            )}
+          </Form.Item>
+
+          <div className="bb-new-trip-access">
+            <label className="bb-new-trip-access-label">Access</label>
+            <RadioGroup onChange={this.onChangeAcessLevel} value={access_level}>
+              <Radio value={'Public'}>Public</Radio>
+              <Radio value={'Private'}>Private</Radio>
+            </RadioGroup>
+            {access_level === 'Private' ? (
+              <SelectInput
+                options={this.allStationsName}
+                handleChange={this.handleSelectPOS}
+                mode="multiple"
+                placeholder="Specify POS"
+                value={POS}
+                className="bb-new-trip-access-select-input"
+                selectedCities={POS}
+              />
+            ) : null}
+          </div>
+
+
+          <Form.Item label="Trip Range">
+            {getFieldDecorator('trip_range', {
+              rules: [
+                this.requiredRule('Please input your trip range')
+              ],
+            })(
+              <RangePicker
+                onChange={this.onChangeRange}
+                className="bb-new-trip-trip-range-picker"
+                disabledDate={this.disabledDate}
+              />
+            )}
+          </Form.Item>
+
+          <h2>Start creating route and instances</h2>
+          <div className="bb-start-creating-route">
             <SelectInput
-              options={this.allStationsName}
-              handleChange={this.handleSelectPOS}
+              options={allcities}
+              handleChange={this.handleMultipleSelectChange}
               mode="multiple"
-              placeholder="Specify POS"
-              value={POS}
-              style={{ width: '150px' }}
-              selectedCities={POS}
+              placeholder="Select Line Cities"
+              value={selectedCities}
+              className="bb-start-creating-route-select-input"
+              selectedCities={selectedCities}
+            />
+          </div>
+
+          {selectedCities.length !== 0 ? (
+            <DraggableCards
+              selectedCities={selectedCities}
+              getCities={this.getCities}
+              getLocations={this.getLocations}
+              selectedLocations={this.arrangedSelectedLocations}
+              activeLocations={allLocations}
             />
           ) : null}
-        </div>
-        <label>Trip Range</label>
-        <RangePicker
-          onChange={this.onChangeRange}
-          style={{ width: '300px', display: 'block', margin: '20px 0' }}
-          disabledDate={this.disabledDate}
-        />
-        <h2>Start creating route and instances</h2>
-        <div style={{ width: '300px' }}>
-          <SelectInput
-            options={allcities}
-            handleChange={this.handleMultipleSelectChange}
-            mode="multiple"
-            placeholder="Select Line Cities"
-            value={selectedCities}
-            style={{ width: '100%' }}
-            selectedCities={selectedCities}
-          />
-        </div>
 
-        {selectedCities.length !== 0 ? (
-          <DraggableCards
-            selectedCities={selectedCities}
-            getCities={this.getCities}
-            getLocations={this.getLocations}
-            selectedLocations={this.arrangedSelectedLocations}
-            activeLocations={allLocations}
-          />
-        ) : null}
-
-        {selectedCities.length > 1 ? (
-          <div style={{ textAlign: 'right', padding: '20px 0' }}>
-            <Button type="primary" onClick={this.handelOnClickSchedule}>
-              Start Scheduling
+          {selectedCities.length > 1 ? (
+            <div className="bb-start-scheduling-button">
+              <Button type="primary" onClick={this.handelOnClickSchedule}>
+                Start Scheduling
             </Button>
-          </div>
-        ) : null}
+            </div>
+          ) : null}
 
-        {startScheduling ? (
-          <div style={{ paddingTop: '20px' }}>
-            {selectedCitiesObject.length > 1 ? (
-              <TableStations
-                locations_name={locations_name}
-                getBuses={this.getBuses}
-                allBusesQuery={allSalons}
-                getTimeLines={this.getTimeLines}
-                selectedLocationObj={selectedLocationObj}
+          {startScheduling ? (
+            <div className="bb-start-scheduling">
+              {selectedCitiesObject.length > 1 ? (
+                <TableStations
+                  locations_name={locations_name}
+                  getBuses={this.getBuses}
+                  allBusesQuery={allSalons}
+                  getTimeLines={this.getTimeLines}
+                  selectedLocationObj={selectedLocationObj}
+                />
+              ) : (
+                  <p className="bb-paragraph-error-color">
+                    Please Select more than one Location from at least 2 different
+                    cities
+              </p>
+                )}
+              <div className="bb-set-seat-price-button">
+                <Button type="primary" onClick={this.handelOnClickSeatPrice}>
+                  Set Seats Price
+              </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {seatPrice ? (
+            this.busesSalons.length !== 0 ? (
+              <SeatPricing
+                selectedCities={selectedCitiesObject}
+                busTypes={this.busesSalons}
+                getSeatPricing={this.getSeatPricing}
               />
             ) : (
-              <p style={{ color: 'red' }}>
-                Please Select more than one Location from at least 2 different
-                cities
-              </p>
-            )}
-            <div style={{ textAlign: 'right', padding: '20px 0' }}>
-              <Button type="primary" onClick={this.handelOnClickSeatPrice}>
-                Set Seats Price
-              </Button>
-            </div>
-          </div>
-        ) : null}
+                <p className="bb-paragraph-error-color">Please Select at least One Bus Salon</p>
+              )
+          ) : null}
+          <Tooltip title={this.isCreateButtonDisabled() ? "Please fill all fields" : ''}>
+            <Button
+              className="bb-create-trip-button"
+              type="primary"
+              htmlType="submit"
+              disabled={this.isCreateButtonDisabled()}>
+              Create Trip
+            </Button>
+          </Tooltip>
 
-        {seatPrice ? (
-          this.busesSalons.length !== 0 ? (
-            <SeatPricing
-              selectedCities={selectedCitiesObject}
-              busTypes={this.busesSalons}
-              getSeatPricing={this.getSeatPricing}
-            />
-          ) : (
-            <p style={{ color: 'red' }}>Please Select at least One Bus Salon</p>
-          )
-        ) : null}
-        <Button style={{ margin: '20px 0' }} type="primary" onClick={this.onSubmit}>
-          Create Trip
-        </Button>
-      </div>
+        </div>
+      </Form>
+
     );
   }
 }
+
+export const TripComposerViewForm = Form.create()(TripComposerView);
 
 /**Get All Cities and Locations when trip composer load, compose() function to use multiple graphql() HOCs together
  *
@@ -379,7 +462,7 @@ export default compose(
  *
  * @function
  * @param {Object} props - return of compose() request
- * @returns {Component} TripComposerView
+ * @returns {Component} TripComposerViewForm
  */
 function TripComposer(props) {
   const { activeLocations, error, loading } = props.AllLocations;
@@ -391,12 +474,12 @@ function TripComposer(props) {
   /** Get active cities has active locations only*/
   let allCitiesObj = activeLocations
     ? activeLocations
-        .filter(location => location.is_active === 'Active')
-        .map(location => location.city)
-        .filter(city => city.is_active === 'Active')
-        .map(city => {
-          return { id: city.id, name: city.name_en };
-        })
+      .filter(location => location.is_active === 'Active')
+      .map(location => location.city)
+      .filter(city => city.is_active === 'Active')
+      .map(city => {
+        return { id: city.id, name: city.name_en };
+      })
     : [];
   let uniqueCitiesObj = Array.from(
     new Set(allCitiesObj.map(cityObj => cityObj.id))
@@ -414,14 +497,14 @@ function TripComposer(props) {
       ))}
     </div>
   ) : (
-    <div>
-      <TripComposerView
-        allcities={uniqueCities}
-        allLocations={activeLocations}
-        allSalons={salonsObject}
-        allCityObj={uniqueCitiesObj}
-        CreatTrip={props.CreatTrip}
-      />
-    </div>
-  );
+        <div>
+          <TripComposerViewForm
+            allcities={uniqueCities}
+            allLocations={activeLocations}
+            allSalons={salonsObject}
+            allCityObj={uniqueCitiesObj}
+            CreatTrip={props.CreatTrip}
+          />
+        </div>
+      );
 }

@@ -1,3 +1,57 @@
 .trip-composer {
   padding: 50px 50px 0px 50px;
 }
+
+.bb-create-trip-button {
+  margin: 20px 0;
+}
+
+.bb-paragraph-error-color {
+  color: red;
+}
+
+.bb-set-seat-price-button {
+  text-align: right;
+  padding: 20px 0;
+}
+
+.bb-start-scheduling {
+  padding-top: 20px;
+}
+
+.bb-start-scheduling-button {
+  text-align: right;
+  padding: 20px 0;
+}
+
+.bb-start-creating-route {
+  width: 300px;
+}
+
+.bb-start-creating-route-select-input {
+  width: 100%;
+}
+
+.bb-new-trip-ref-code {
+  width: 300px;
+  display: block;
+  margin: 0 0 20px;
+}
+
+.bb-new-trip-access {
+  margin: 20px 0;
+}
+
+.bb-new-trip-access-label {
+  display: block;
+}
+
+.bb-new-trip-access-select-input {
+  width: 150px;
+}
+
+.bb-new-trip-trip-range-picker {
+  width: 300px;
+  display: block;
+  margin: 20px 0;
+}
